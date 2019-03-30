@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+<p>
+    <h1>Авторизация</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.username.label }}<br>
+            {{ form.username }}<br>
+            {% for error in form.username.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.password.label }}<br>
+            {{ form.password }}<br>
+            {% for error in form.password.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </p>
+        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+        <p>{{ form.submit() }}</p>
+    </form>
+</p>
+    {% if warning %}
+    	<div class="alert alert-danger"><p>Введен неправильный логин или пароль. Повторите попытку.</p></div>
+    {% endif %}
+{% endblock %}

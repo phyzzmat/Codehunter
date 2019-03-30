@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+<div class="container">
+	<div class="row">
+		<div class="col-8">
+			<h3>{{problem.id}}. {{problem.title}}</h3>
+			<p>{{problem.statement}}</p>
+			<h5>Примеры входных и выходных данных</h5>
+		    	<table class="table">
+				  <thead>
+				    <tr>
+				      <th scope="col">standard input</th>
+				      <th scope="col">standard output</th>
+				    </tr>
+				  </thead>
+				  <tbody>
+				  	{% for item in examples %}
+				  	<tr>
+				      <td>{{item.example_in|safe}}</td>
+				      <td>{{item.example_out|safe}}</td>
+				    </tr>
+				  	{% endfor %}
+				  </tbody>
+				</table>
+		</div>
+		<div class="col-4">
+			<h3>Сдать решение</h3>
+		    <form action="" method="post" enctype="multipart/form-data">
+		        {{ form.hidden_tag() }}
+		        {{ form.csrf_token }}
+		        <p>
+		            {{ form.code.label }}<br>
+		            {{ form.code }}<br>
+		        </p>
+		        <p>{{ form.submit() }}</p>
+		    </form>
+		    <h3>Ваши посылки</h3>
+		    	{% if not runs %}
+		    	<h5>Вы еще не отправляли ни одного решения.</h5>
+		    	{% else %}
+				<table class="table">
+				  <thead>
+				    <tr>
+				      <th scope="col">ID</th>
+				      <th scope="col">Время посылки</th>
+				      <th scope="col">Вердикт</th>
+				      <th scope="col">Время выполнения</th>
+				    </tr>
+				  </thead>
+				  <tbody>
+				  	{% for solution in runs %}
+				    <tr>
+				      <th scope="row">{{solution.id}}</th>
+				      <td>{{solution.submission_time}}</td>
+				      <td>{{solution.verdict}}</td>
+				      <td>{{solution.max_time}}</td>
+				    </tr>
+				    {% endfor %}
+				  </tbody>
+				</table>
+				{% endif %}
+		</div>
+	</div>
+</div>
+
+ {% endblock %}

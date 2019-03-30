@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+
+    {% for item in news %}
+    	<p>
+        <h2>{{item["title"]}}</h2>
+        <div>{{item["content"]}}</div>
+        <div class="panel panel-default">
+  		<div class="panel-body"><a href="news/{{item['id']}}">Читать подробнее...</a></div>
+		</div>
+    	</p>
+    {% endfor %}
+
+ {% endblock %}

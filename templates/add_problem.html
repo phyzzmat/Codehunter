@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+    <h1>Добавление задачи в архив</h1>
+    <form action="" method="post" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ form.csrf_token }}
+        <p>
+            {{ form.title.label }}<br>
+            {{ form.title }}<br>
+        </p>
+        <p>
+            {{ form.statement.label }}<br>
+            {{ form.statement }}<br>
+        </p>
+        <p>
+            {{ form.example_in.label }}<br>
+            {{ form.example_in }}<br>
+        </p>
+        <p>
+            {{ form.example_out.label }}<br>
+            {{ form.example_out }}<br>
+        </p>
+        <p>
+            {{ form.test.label }}<br>
+            {{ form.test }}<br>
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}

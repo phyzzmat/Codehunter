@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+
+    {% for item in problems %}
+    	<p>
+        <h3>{{item.id}}. {{item.title}}</h3>
+        <div class="panel panel-default">
+  		<div class="panel-body"><a href="problems/{{item['id']}}">Сдать задачу!</a></div>
+		</div>
+    	</p>
+    {% endfor %}
+
+ {% endblock %}

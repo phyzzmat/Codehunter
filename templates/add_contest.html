@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+    <h1>Добавление соревнования</h1>
+    <form action="" method="post" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.title.label }}<br>
+            {{ form.title }}<br>
+        </p>
+        <p>
+            {{ form.time_start.label }}<br>
+            {{ form.time_start }}<br>
+        </p>
+        <p>
+            {{ form.time_end.label }}<br>
+            {{ form.time_end }}<br>
+        </p>
+        <p>
+            {{ form.problems.label }}<br>
+            {{ form.problems }}<br>
+        </p>
+        <p>
+            {{ form.score_dist.label }}<br>
+            {{ form.score_dist }}<br>
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}
