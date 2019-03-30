@@ -120,7 +120,7 @@ def solve_problem(p_id):
         db.session.flush()
 
         print(form.code.data.read())
-        f = open(os.getcwd() + f'/mysite/runs/{new_solution.id}.py', 'wb')
+        f = open(os.getcwd() + f'/runs/{new_solution.id}.py', 'wb')
         f.write(code)
         f.close()
 
@@ -156,7 +156,7 @@ def add_problem():
         f.close()
 
         compressed_tests = ZipFile("tmp_tests.zip")
-        compressed_tests.extractall(os.getcwd() + f"/mysite/problem_tests/{new_problem.id}")
+        compressed_tests.extractall(os.getcwd() + f"/problem_tests/{new_problem.id}")
 
 
         db.session.commit()
@@ -203,32 +203,78 @@ def add_contest():
                            form=form)
 
 
+
 @app.route('/contests', methods=['GET'])
 def get_contests():
+    contests = Contest.query.all()
+    contests.sort(key=lambda item: item.id, reverse=True)
+    return render_template('contests.html', contests=contests)
+
+
+@app.route('/contests/<int:c_id>', methods=['GET'])
+def solve_contest(c_id):
+    contest = Contest.query.filter_by(id=c_id).first()
+    tasks = contest.Tasks
+    if contest.time_start > datetime.now():
+        return render_template('contest.html', access="denied", contest=contest, tasks=tasks)
+    elif contest.time_end < datetime.now():
+        return render_template('contest.html', access="upsolve", contest=contest, tasks=tasks)
+    return render_template('contest.html', access="active", contest=contest, tasks=tasks)
+
+
+@app.route('/contests/<int:c_id>/<int:p_id>', methods=['GET'])
+def solve_contest_problem(c_id, p_id):
+    
+    contest = Contest.query.filter_by(id=c_id).first()
+    problem_id = contest.Tasks[p_id].task_id
+    problem = ProblemItself.query.filter_by(id=problem_id).first()
+    examples = problem.Examples
+    
+    if contest.time_start > datetime.now():
+        
+        return render_template('contest.html', access="denied",
+                               contest=contest, tasks=tasks)
+    else:
+        
+        form = SolveProblemForm()
+        if form.validate_on_submit():
+            user_id = session['user_id']
+            code = form.code.data.read()
+            user = User.query.filter_by(id=user_id).first()
+            new_solution = Solution(test_case=0,
+                                    verdict="Q",
+                                    submission_time=datetime.now(),
+                                    max_time=0,
+                                    problem_id=problem_id,
+                                    solution_code=0)
+            user.Solutions.append(new_solution)
+            db.session.flush()
+    
+            f = open(os.getcwd() + f'/runs/{new_solution.id}.py', 'wb')
+            f.write(code)
+            f.close()
+    
+            db.session.commit()
+            return redirect(f'/contest/{c_id}/{p_id}')
+        
+        runs = Solution.query.filter_by(problem_id=p_id, user_id=session['user_id']).all()
+        runs.sort(key=lambda item: item.submission_time, reverse=True)
+        beautiful_runs = transform(runs)
+        
+        if contest.time_end < datetime.now():
+            return render_template('contest.html', access="upsolve",
+                                   contest=contest, tasks=tasks)
+        
+        return render_template('contest.html', access="active",
+                               contest=contest, tasks=tasks)
+    
+
+@app.route('/contests/<int:c_id>', methods=['GET'])
+def get_standings(c_id):
     pass
 
-
-#WORK WITH NEWS-------------------------------------------------------------
-
-
-#OLD EXAMPLES---------------------------------------------------------------
-@app.route('/news_old')
-def news():
-    with open("sp.json", "rt", encoding="utf8") as f:
-        news_list = json.loads(f.read())
-    print(news_list)
-    return render_template('news.html', news=news_list)
-
-
-
-@app.route('/odd')
-def odd_even():
-    return render_template('odd_even.html', number=255)
-
-
-
-
-#OLD EXAMPLES---------------------------------------------------------------
+    
+    
 
 if __name__ == '__main__':
     app.run(port=8080, host='0.0.0.0')
