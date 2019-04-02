@@ -9,6 +9,7 @@ class AddNewsForm(FlaskForm):
     content = TextAreaField('Текст новости', validators=[DataRequired()])
     submit = SubmitField('Добавить')
     
+    
 class AddProblemForm(FlaskForm):
     title = StringField('Название задачи', validators=[DataRequired()])
     statement = TextAreaField('Условие задачи', validators=[DataRequired()], 
@@ -21,9 +22,11 @@ class AddProblemForm(FlaskForm):
     test = FileField('Тесты к задаче', validators=[DataRequired()])
     submit = SubmitField('Добавить')
     
+    
 class SolveProblemForm(FlaskForm):
     code = FileField('Ваше решение: ', validators=[DataRequired()])
     submit = SubmitField('Загрузить')
+    
     
 class AddContestForm(FlaskForm):
     title = StringField('Название соревнования', validators=[DataRequired()])
