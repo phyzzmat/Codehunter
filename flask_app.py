@@ -95,10 +95,12 @@ def get_problems():
         return render_template('problems.html', problems=sorted(problems,
                                 key=lambda item: item.id, reverse=True))
     else:
-        problems_public = db.session.query(Arrangement, Contest).filter(Contest.time_end < datetime.now()).all()
+        problems_public = db.session.query(Arrangement, Contest).filter(Contest.time_end 
+                                                                        < datetime.now()).all()
         problems_public.sort(key=lambda item: item.Arrangement.task_id, reverse=True)
         problems_public = [item.Arrangement.task_id for item in problems_public]
-        problems = ProblemItself.query.filter((ProblemItself.id.in_(problems_public)) | (ProblemItself.public.is_(True))).all()
+        problems = ProblemItself.query.filter((ProblemItself.id.in_(problems_public))
+                                              | (ProblemItself.public.is_(True))).all()
         problems.sort(key=lambda item: item.id, reverse=True)
     return render_template('problems.html', problems=problems)
 
@@ -244,7 +246,8 @@ def solve_contest(c_id):
     if contest.time_start > datetime.now():
         time_to_launch = get_beautiful_timediff(contest.time_start - datetime.now())
         return render_template('contest.html', access="denied", time_to_launch=time_to_launch)
-    runs = Solution.query.filter(Solution.user_id==session['user_id'], Solution.problem_id.in_(p_ids)).all()
+    runs = Solution.query.filter(Solution.user_id==session['user_id'],
+                                 Solution.problem_id.in_(p_ids)).all()
     runs.sort(key=lambda item: item.submission_time, reverse=True)
     beautiful_runs = transform(runs)
     if contest.time_end < datetime.now():
@@ -324,7 +327,8 @@ def get_standings(c_id):
         return render_template('contests.html', access="denied", time_to_launch=time_to_launch)
     else:
         return render_template('standings.html', standings=standings, contest=contest, lt=len(tasks),
-                               letters=LETTERS, points=[task.points for task in tasks], keys=keys, total=total_scores)
+                               letters=LETTERS, points=[task.points for task in tasks],
+                               keys=keys, total=total_scores)
 
 
 
