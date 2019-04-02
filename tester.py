@@ -7,7 +7,7 @@ from threading import Thread
 from database import *
 
 
-TL = 1000
+TL = 2000
 
 def kill(proc_pid):
     process = psutil.Process(proc_pid)
@@ -16,48 +16,53 @@ def kill(proc_pid):
     process.kill()
 
 
-def launch(test_instance, script_name, TL, stdinput=subprocess.PIPE, stdoutput='/home/killrealm/mysite/tmp.txt'):
+def launch(test_instance, script_name, TL, stdoutput='/home/killrealm/mysite/tmp.txt'):
 
     g = open(stdoutput, 'w')
-    print(test_instance, script_name, os.getcwd())
-    p = subprocess.Popen(['cat', test_instance, '|',  'python3', script_name],
-                         stdout=g, stdin=stdinput, bufsize=-1, shell=True)
+    start_time = time()
+    p = subprocess.Popen(['python3', script_name],
+                         stdout=g, stdin=open(test_instance), bufsize=-1)
     try:
         p.communicate(timeout=TL / 1000)
     except Exception:
-        kill(p.pid)
+        p.kill()
         raise TimeoutError
 
+    end_time = time()
     g.close()
-    result = open('/home/killrealm/mysite/tmp.txt').read()
-    return result.strip().replace('\r', '')
+    result = open(stdoutput).read()
+    return result.strip().replace('\r', ''), int(1000 * (end_time - start_time))
 
 
 def check(test_instance, script_name):
-    start_time = time()
     try:
-        run = launch(test_instance, script_name, TL)
+        run, t = launch(test_instance, script_name, TL)
         assert run
     except TimeoutError:
         return "TL", TL
     except Exception as e:
-        print(e)
-        return "RE", int(1000 * (time() - start_time))
+        print(e, test_instance)
+        return "RE", t
     else:
         correct_answer = open(test_instance[:-3] + '.out').read().strip()
         if run == correct_answer:
-            return "AC", int(1000 * (time() - start_time))
+            return "AC", t
         print(run, correct_answer)
-        return "WA", int(1000 * (time() - start_time))
+        return "WA", t
 
 
+def name(t):
+    n = t.split('/')[-1].split('.')[0]
+    return int(n)
 
-def test_solution(solution):
+
+def test_solution(solution, calls=2):
 
     test_dir = os.getcwd() + f"/problem_tests/{solution.problem_id}/"
     script_name =  os.getcwd() + f"/runs/{solution.id}.py"
 
     tests = [os.path.join(test_dir, filename) for filename in os.listdir(test_dir)]
+    tests.sort(key=name)
     test_kit = []
     for i in tests:
         if i.endswith(".in"):
@@ -68,12 +73,15 @@ def test_solution(solution):
         i += 1
         solution.verdict = "T"
         solution.test_case = i
-        if i % 5 == 0:
-            db.session.commit()
+
+        db.session.commit()
 
         test_result = check(test_instance, script_name)
         solution.max_time = max(solution.max_time, test_result[1])
         if test_result[0] in ["WA", "RE", "TL"]:
+            if test_result[0] == "TL" and calls != 0:
+                solution.max_time = 0
+                return test_solution(solution, calls=calls-1)
             solution.verdict = test_result[0]
             solution.test_case = i
             break
@@ -84,9 +92,14 @@ def test_solution(solution):
 
 def core():
     while "The best teacher in the world is WA":
-        pending_solutions = Solution.query.filter_by(verdict="Q").all()
-        for solution in pending_solutions:
-            test_solution(solution)
-        sleep(10)
+        try:
+            pending_solutions = Solution.query.filter_by(verdict="Q").all()
+            for solution in pending_solutions:
+                test_solution(solution, calls=2)
+            sleep(10)
+        except Exception as e:
+            print(e)
+            sleep(10)
+            continue
 
 core()

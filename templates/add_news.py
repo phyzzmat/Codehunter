@@ -31,7 +31,6 @@ class AddContestForm(FlaskForm):
     time_end = DateTimeField('Окончание соревнования', default=datetime.datetime.now())
     problems = StringField('ID задач через запятую', validators=[DataRequired()])
     score_dist = StringField('Разбалловка через запятую', validators=[DataRequired()])
-    announce = BooleanField('Опубликовать анонс?')
     submit = SubmitField('Загрузить')
     
     

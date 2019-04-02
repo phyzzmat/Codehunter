@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+	{% if access=="denied" %}
+	<h2>К сожалению, соревнование еще не началось. Приходите позже!</h2>
+	<p>До запуска: {{time_to_launch}}</p>
+	{% else %}
+	<div class="container">
+		<div class="row">
+			<div class="col-8">
+				<table class="table table table-striped table-bordered">
+					<thead>
+						<tr>
+							<th scope="col"></th>
+							<th scope="col"></th>
+							<th scope="col">Задача</th>
+						</tr>
+					</thead>
+					<tbody>
+			    		{% for item in range(lt) %}
+					    <tr>
+					 	    <th scope="row" style="width: 50px; text-align: center;">{{letters[item]}}</th>
+					 	    <td style="width: 50px; text-align: center;"><a href="{{contest.id}}/{{item + 1}}">{{points[item]}}</a></td>
+					    	<td><a href="{{contest.id}}/{{item + 1}}">{{tasks[item].title}}</a></td>
+					    </tr>
+					    {% endfor %}
+					 </tbody>
+				</table>
+			</div>
+			<div class="col-4">
+				{% include 'runs.html' %}
+			</div>
+		</div>
+	</div>
+	{% endif %}
+
+ {% endblock %}

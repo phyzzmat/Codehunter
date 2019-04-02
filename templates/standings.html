@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+ 
+{% block content %}
+	<p></p>
+	<p><h5><center>Таблица результатов соревнования "{{contest.title}}", <a href="/contests/{{contest.id}}">вернуться</a> к задачам</h5></center></p>
+	<table class="table table-striped table-bordered table-sm" style="table-layout: fixed; width: {{350 + lt * 100}}px;" align="center">
+			<tr>
+				<td style="width: 30px; text-align: center;"></td>
+				<td></td>
+				{% for i in range(lt) %}
+				<th style="width: 100px; text-align: center;">
+					{{letters[i]}}<br>
+					<small>{{points[i]}}</small>
+				</th>
+				{% endfor %}
+				<th style="width: 100px; text-align: center;">
+				Σ
+				</th>
+			</tr>
+    	{% for user in keys %}
+		    <tr>
+		    	<th scope="row" style="width: 30px; text-align: center;">{{loop.index}}</th>
+		    	<th scope="row">{{user}}</th>
+		    	{% for res in standings[user] %}
+		 	    <td style="width: 100px; text-align: center;">
+		 	    	{{res.points}}{% if res.submission_time %}<br style="line-height: 0px; visibility: hidden;">
+		 	    	<div style="font-size: 10px;">{{res.submission_time}}</div>
+		 	    	{% endif %}
+		 	    </td>
+
+		 	    {% endfor %}
+		 	    <td style="width: 100px; text-align: center;">
+		 	    {{total[user]}}
+		 	    </td>
+		    </tr>
+		{% endfor %}
+	</table>
+	</center>
+
+ {% endblock %}

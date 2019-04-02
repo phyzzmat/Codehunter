@@ -1,0 +1,27 @@
+<h5>Ваши посылки</h5>
+		    	{% if not runs %}
+		    	<p>Вы еще не отправляли ни одного решения.</p>
+		    	{% else %}
+		    	<small><p></p>
+				<table class="table table-striped table-bordered">
+				  <thead>
+				    <tr>
+				      <th scope="col">ID</th>
+				      <th scope="col">Время посылки</th>
+				      <th scope="col">Вердикт</th>
+				      <th scope="col">Время выполнения</th>
+				    </tr>
+				  </thead>
+				  <tbody>
+				  	{% for solution in runs %}
+				    <tr>
+				      <th scope="row">{{solution.id}}</th>
+				      <td>{{solution.submission_time}}</td>
+				      <td>{{solution.verdict|safe}}</td>
+				      <td>{{solution.max_time}}</td>
+				    </tr>
+				    {% endfor %}
+				  </tbody>
+				</table>
+				</small>
+				{% endif %}

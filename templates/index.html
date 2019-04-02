@@ -1,8 +1,8 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=1280, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/cmu-sans-serif" type="text/css"/>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
@@ -13,17 +13,37 @@
 </head>
 	<img src="static/logo.png" style="float: left"> <div style="padding-top: 30px; padding-right: 30px; color: #ffffff; float: right;">В теории, теория и практика неразделимы. На практике это не так.</div><br>
 	<div style="clear:both;"></div>
-  <body style="background-color: #202020">
+  <body style="background-color: #303030">
+        <style type="text/css">
+    .container {
+      margin-left: auto;
+      margin-top: 30px;
+      margin-right: 50px;
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+</style>
     <header>
-      <nav class="navbar navbar-dark" style="background-color: #202020;">
+      <nav class="navbar navbar-dark" style="background-color: #212121;">
         <a class="navbar-brand" href="/contests">Соревнования</a>
         <a class="navbar-brand" href="/news">Новости</a>
         <a class="navbar-brand" href="/problems">Задачи</a>
-        {% if "username" in session %}
-   			<a class="navbar-brand" href="/logout">{{session['username']}}</a>
-   		{% else %}
-			<a class="navbar-brand" href="/login">Войти</a> <a class="navbar-brand" href="/signup">Зарегистрироваться</a>
-		{% endif %}
+         {% if "username" in session %}
+          {% if session['admin'] %}
+              <nav class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Администрирование
+                <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <div><a href="add_contest">Добавить контест</a></div>
+                  <div><a href="add_news">Добавить новость</a></div>
+                  <div><a href="add_problem">Добавить задачу</a></div>
+                </ul>
+              </nav>
+          {% endif %}
+           <a class="navbar-brand" href="/logout">Выйти</a>
+      {% else %}
+      <a class="navbar-brand" href="/login">Войти</a> <a class="navbar-brand" href="/signup">Зарегистрироваться</a>
+    {% endif %}
       </nav>
     </header>
     <!-- Begin page content -->
@@ -50,7 +70,7 @@
 	      <img src="static/vova.jpg" style=" height: 100%; width: auto;">
 	      <div class="carousel-caption">
         	<h3>Популярность среди экспертов</h3>
-        	<p>Разработка нашего портала была поддержана призером Всероссийской олимпиады школьников по информатике</p>
+        	<p>Разработка нашего портала была поддержана призером Открытой олимпиады по информатике</p>
       	  </div>
 	    </div>
 
@@ -62,7 +82,6 @@
       	</div>
       	</div>
 	  </div>
-
 	  <!-- Left and right controls -->
 	  <a class="carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
     	<span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -73,6 +92,7 @@
     <span class="sr-only">Next</span>
   </a>
 	</div>
+  <p></p>
 
     </main>
   </body>

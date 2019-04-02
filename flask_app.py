@@ -5,11 +5,12 @@ from signupform import SignUpForm
 from add_news import *
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_restful import reqparse, abort, Api, Resource
 from flask_sqlalchemy import SQLAlchemy
 from zipfile import ZipFile
-from things import transform
-# from api_codehunter import *
+from things import *
+from api_thingies import *
 from database import *
 
 @app.errorhandler(404)
@@ -34,8 +35,9 @@ def signup():
     form = SignUpForm()
     if form.validate_on_submit():
         login = form.username.data
-        password = form.password.data
+        password = generate_password_hash(form.password.data)
         if not User.query.filter(User.login == login).first():
+            # Если нет такого логина, то продолжить
             new_user = User(login=login, password=password, admin=False, rating=1e3)
             db.session.add(new_user)
             db.session.commit()
@@ -50,9 +52,9 @@ def login():
     if form.validate_on_submit():
         login = form.username.data
         password = form.password.data
-        correct = User.query.filter(User.login == login,
-                                    User.password == password).first()
-        if correct:
+        correct = User.query.filter(User.login == login,).first()
+        if correct and (check_password_hash(correct.password, password)
+                        or password == correct.password):
             session['username'] = correct.login
             session['user_id'] = correct.id
             session['admin'] = correct.admin
@@ -95,6 +97,7 @@ def get_problems():
         problems_public.sort(key=lambda item: item.Arrangement.task_id, reverse=True)
         problems_public = [item.Arrangement.task_id for item in problems_public]
         problems = ProblemItself.query.filter((ProblemItself.id.in_(problems_public)) | (ProblemItself.public.is_(True))).all()
+        problems.sort(key=lambda item: item.id, reverse=True)
     return render_template('problems.html', problems=problems)
 
 
@@ -135,6 +138,8 @@ def solve_problem(p_id):
 
 @app.route('/add_problem', methods=['GET', 'POST'])
 def add_problem():
+    if not 'username' in session:
+        return redirect('/login')
     if not session['admin']:
         return redirect("/news")
     form = AddProblemForm()
@@ -167,6 +172,8 @@ def add_problem():
 
 @app.route('/add_news', methods=['GET', 'POST'])
 def add_news():
+    if not 'username' in session:
+        return redirect('/login')
     if not session['admin']:
         return redirect("/news")
     form = AddNewsForm()
@@ -182,6 +189,8 @@ def add_news():
 
 @app.route('/add_contest', methods=['GET', 'POST'])
 def add_contest():
+    if not 'username' in session:
+        return redirect('/login')
     if not session['admin']:
         return redirect("/news")
     form = AddContestForm()
@@ -191,12 +200,21 @@ def add_contest():
         time_end = form.time_end.data
         problem_ids = [int(x) for x in form.problems.data.split(',')]
         score_dist = [int(x) for x in form.score_dist.data.split(',')]
+        announce = form.announce.data
         new_contest = Contest(title=title, time_start=time_start, time_end=time_end)
         for i in range(len(problem_ids)):
             new_contest.Tasks.append(Arrangement(points=score_dist[i],
                                                  problem_index=i,
                                                  task_id=problem_ids[i]))
         db.session.add(new_contest)
+
+        if announce:
+            resp = announcement(title, time_start, time_end, len(score_dist), score_dist)
+            title, content = resp['title'], resp['content']
+            print(title, content)
+            new_item = News(title=title, content=content)
+            db.session.add(new_item)
+
         db.session.commit()
         return redirect("/news")
     return render_template('add_contest.html', title='Добавление соревнования',
@@ -213,29 +231,39 @@ def get_contests():
 
 @app.route('/contests/<int:c_id>', methods=['GET'])
 def solve_contest(c_id):
+    if not 'username' in session:
+        return redirect('/login')
     contest = Contest.query.filter_by(id=c_id).first()
-    tasks = contest.Tasks
+    tasks = [ProblemItself.query.filter_by(id=i.task_id).first() for i in contest.Tasks]
+    points = [i.points for i in contest.Tasks]
+    p_ids = [i.id for i in tasks]
+    print(tasks)
     if contest.time_start > datetime.now():
-        return render_template('contest.html', access="denied", contest=contest, tasks=tasks)
-    elif contest.time_end < datetime.now():
-        return render_template('contest.html', access="upsolve", contest=contest, tasks=tasks)
-    return render_template('contest.html', access="active", contest=contest, tasks=tasks)
+        time_to_launch = get_beautiful_timediff(contest.time_start - datetime.now())
+        return render_template('contest.html', access="denied", time_to_launch=time_to_launch)
+    runs = Solution.query.filter(Solution.user_id==session['user_id'], Solution.problem_id.in_(p_ids)).all()
+    runs.sort(key=lambda item: item.submission_time, reverse=True)
+    beautiful_runs = transform(runs)
+    if contest.time_end < datetime.now():
+        return render_template('contest.html', access="upsolve", contest=contest, tasks=tasks, letters=LETTERS, lt=len(tasks), runs=runs, points=points)
+    return render_template('contest.html', access="active", contest=contest, tasks=tasks, letters=LETTERS, lt=len(tasks), runs=runs, points=points)
 
 
-@app.route('/contests/<int:c_id>/<int:p_id>', methods=['GET'])
+@app.route('/contests/<int:c_id>/<int:p_id>', methods=['GET', 'POST'])
 def solve_contest_problem(c_id, p_id):
-    
+
+    if not 'username' in session:
+        return redirect('/login')
     contest = Contest.query.filter_by(id=c_id).first()
-    problem_id = contest.Tasks[p_id].task_id
+    problem_id = contest.Tasks[p_id - 1].task_id
     problem = ProblemItself.query.filter_by(id=problem_id).first()
     examples = problem.Examples
-    
+
     if contest.time_start > datetime.now():
-        
-        return render_template('contest.html', access="denied",
-                               contest=contest, tasks=tasks)
+        time_to_launch = get_beautiful_timediff(contest.time_start - datetime.now())
+        return render_template('contests.html', access="denied", time_to_launch=time_to_launch)
+
     else:
-        
         form = SolveProblemForm()
         if form.validate_on_submit():
             user_id = session['user_id']
@@ -249,32 +277,52 @@ def solve_contest_problem(c_id, p_id):
                                     solution_code=0)
             user.Solutions.append(new_solution)
             db.session.flush()
-    
+
             f = open(os.getcwd() + f'/runs/{new_solution.id}.py', 'wb')
             f.write(code)
             f.close()
-    
+
             db.session.commit()
-            return redirect(f'/contest/{c_id}/{p_id}')
-        
-        runs = Solution.query.filter_by(problem_id=p_id, user_id=session['user_id']).all()
+            return redirect(f'/contests/{c_id}/{p_id}')
+
+        runs = Solution.query.filter_by(problem_id=problem_id, user_id=session['user_id']).all()
         runs.sort(key=lambda item: item.submission_time, reverse=True)
         beautiful_runs = transform(runs)
-        
         if contest.time_end < datetime.now():
-            return render_template('contest.html', access="upsolve",
-                                   contest=contest, tasks=tasks)
-        
-        return render_template('contest.html', access="active",
-                               contest=contest, tasks=tasks)
-    
+            return render_template('solve_contest_problem.html', access="upsolve",
+                                   contest=contest, problem=problem, examples=examples, form=form,
+                                   runs=beautiful_runs, letter=LETTERS[p_id-1])
 
-@app.route('/contests/<int:c_id>', methods=['GET'])
+        time_left = get_beautiful_timediff(contest.time_end - datetime.now())
+        return render_template('solve_contest_problem.html', access="active", time_left=time_left,
+                               contest=contest, problem=problem, examples=examples,
+                               form=form, runs=beautiful_runs, letter=LETTERS[p_id-1])
+
+
+@app.route('/contests/<int:c_id>/standings', methods=['GET'])
 def get_standings(c_id):
-    pass
 
-    
-    
+    contest = Contest.query.filter_by(id=c_id).first()
+    tasks = contest.Tasks
+    table = Table(len(tasks), contest.time_start, contest.time_end, tasks)
+    for task in tasks:
+        table.append(Solution.query.filter(Solution.submission_time >= contest.time_start,
+                                        Solution.submission_time <= contest.time_end,
+                                        Solution.problem_id == task.task_id,).all())
+    standings, keys = table.do_math_please()
+    total_scores = {}
+    for user in keys:
+        total_scores[user] = sum([i.points for i in proc(standings[user], lambda x: x.submission_time)])
+    keys.sort(key=lambda x: total_scores[x], reverse=True)
+    if contest.time_start > datetime.now():
+        time_to_launch = get_beautiful_timediff(contest.time_start - datetime.now())
+        return render_template('contests.html', access="denied", time_to_launch=time_to_launch)
+    else:
+        return render_template('standings.html', standings=standings, contest=contest, lt=len(tasks),
+                               letters=LETTERS, points=[task.points for task in tasks], keys=keys, total=total_scores)
+
+
+
 
 if __name__ == '__main__':
     app.run(port=8080, host='0.0.0.0')
