@@ -1,13 +1,15 @@
+from datetime import *
+from database import *
+from flask_sqlalchemy import SQLAlchemy
+from flask import *
+
+
 def proc(arr, func):
     a = []
     for i in arr:
         if func(i): a.append(i)
     return a
 
-from datetime import *
-from database import *
-from flask_sqlalchemy import SQLAlchemy
-from flask import *
 
 def transform(runs):
     key = {"WA": '<img src="{}"> на тесте '.format(url_for('static', filename='WA.png')),
@@ -23,11 +25,14 @@ def transform(runs):
             runs[index].verdict += str(runs[index].test_case)
     return runs
 
+
 def get_beautiful_timediff(timed):
     return str(timed).split('.')[0]
 
+
 def get_beautiful_time(t):
     return str(t).split('.')[0]
+
 
 LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -40,6 +45,7 @@ class Table:
         self.table = []
         self.tasks = tasks
 
+        
     def append(self, elem):
         self.table.append(elem)
 
@@ -102,12 +108,14 @@ class Table:
 
         return (self.ordered_solution_list, sorted_keys)
 
+    
 class Result:
 
     def __init__(self, points, submission_time):
         self.points = points
         self.submission_time = submission_time
 
+        
 def recalc(ts, te, tsub, pts, runs):
     ts = (ts - datetime(1970,1,1)).total_seconds()
     te = (te - datetime(1970,1,1)).total_seconds()
@@ -117,6 +125,7 @@ def recalc(ts, te, tsub, pts, runs):
     mult = d1 / d2
     return int(pts * (1 - 0.5 * mult)) - runs * 50
 
+
 def beautify(ts, tsub):
     ts = (ts - datetime(1970,1,1)).total_seconds()
     tsub = (tsub - datetime(1970,1,1)).total_seconds()
@@ -124,6 +133,7 @@ def beautify(ts, tsub):
     m = d1 // 60
     return f'{str(m).rjust(2, "0")}:{str(d1 % 60).rjust(2, "0")}'
 
+    
 def announcement(title, start_time, end_time, problems, scoredist):
     return {"title": f"Анонс раунда {title}",
 "content": f'''Команда координаторов портала Codehunter рада пригласить вас на новое соревнование! Раунд начнется в {get_beautiful_time(start_time)}, а на решение задач участникам будет отведено {get_beautiful_timediff(end_time - start_time)}.
