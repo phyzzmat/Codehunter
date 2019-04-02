@@ -79,10 +79,12 @@ def get_news():
     news.sort(key=lambda item: item.id, reverse=True)
     return render_template('news.html', news=news)
 
+
 @app.route('/news/<int:n_id>', methods=['GET'])
 def get_news_item(n_id):
     news = News.query.filter_by(id=n_id).first()
     return render_template('news_item.html', news=news)
+
 
 @app.route('/problems', methods=['GET'])
 def get_problems():
@@ -187,6 +189,7 @@ def add_news():
     return render_template('add_news.html', title='Добавление новости',
                            form=form)
 
+
 @app.route('/add_contest', methods=['GET', 'POST'])
 def add_contest():
     if not 'username' in session:
@@ -245,8 +248,10 @@ def solve_contest(c_id):
     runs.sort(key=lambda item: item.submission_time, reverse=True)
     beautiful_runs = transform(runs)
     if contest.time_end < datetime.now():
-        return render_template('contest.html', access="upsolve", contest=contest, tasks=tasks, letters=LETTERS, lt=len(tasks), runs=runs, points=points)
-    return render_template('contest.html', access="active", contest=contest, tasks=tasks, letters=LETTERS, lt=len(tasks), runs=runs, points=points)
+        return render_template('contest.html', access="upsolve", contest=contest,
+            tasks=tasks, letters=LETTERS, lt=len(tasks), runs=runs, points=points)
+    return render_template('contest.html', access="active", contest=contest, tasks=tasks,
+                           letters=LETTERS, lt=len(tasks), runs=runs, points=points)
 
 
 @app.route('/contests/<int:c_id>/<int:p_id>', methods=['GET', 'POST'])
