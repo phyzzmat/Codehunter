@@ -13,6 +13,7 @@ from things import *
 from api_thingies import *
 from database import *
 
+
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found 404'}), 404)
