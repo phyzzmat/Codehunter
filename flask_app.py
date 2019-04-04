@@ -76,7 +76,6 @@ def logout():
 @app.route('/news', methods=['GET'])
 def get_news():
     news = News.query.all()
-    print(news)
     news.sort(key=lambda item: item.id, reverse=True)
     return render_template('news.html', news=news)
 
@@ -112,7 +111,6 @@ def solve_problem(p_id):
         return redirect('/login')
     problem = ProblemItself.query.filter_by(id=p_id).first()
     examples = problem.Examples
-    print(examples[0].example_in)
     form = SolveProblemForm()
     if form.validate_on_submit():
         user_id = session['user_id']
@@ -127,7 +125,6 @@ def solve_problem(p_id):
         user.Solutions.append(new_solution)
         db.session.flush()
 
-        print(form.code.data.read())
         f = open(os.getcwd() + f'/runs/{new_solution.id}.py', 'wb')
         f.write(code)
         f.close()
@@ -217,7 +214,6 @@ def add_contest():
         if announce:
             resp = announcement(title, time_start, time_end, len(score_dist), score_dist)
             title, content = resp['title'], resp['content']
-            print(title, content)
             new_item = News(title=title, content=content)
             db.session.add(new_item)
 
@@ -243,7 +239,6 @@ def solve_contest(c_id):
     tasks = [ProblemItself.query.filter_by(id=i.task_id).first() for i in contest.Tasks]
     points = [i.points for i in contest.Tasks]
     p_ids = [i.id for i in tasks]
-    print(tasks)
     if contest.time_start > datetime.now():
         time_to_launch = get_beautiful_timediff(contest.time_start - datetime.now())
         return render_template('contest.html', access="denied", time_to_launch=time_to_launch)
