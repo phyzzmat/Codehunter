@@ -53,10 +53,11 @@ def login():
         password = form.password.data
         correct = User.query.filter(User.login == login,).first()
         if correct and (check_password_hash(correct.password, password)
-                        or password == correct.password):
+                        or password == correct.password): # чекаем, совпадает ли по хешу
+            # обратная совместимость с первой версией: чекаем, совпадает ли наивно пароль
             session['username'] = correct.login
             session['user_id'] = correct.id
-            session['admin'] = correct.admin
+            session['admin'] = correct.admin # boolean
             return redirect("/index")
         return render_template('login.html', title='Авторизация',
                                form=form, warning=True)
@@ -66,21 +67,21 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('username',0)
-    session.pop('user_id',0)
+    session.pop('username', 0)
+    session.pop('user_id', 0)
     return redirect('/login')
 
 
 @app.route('/news', methods=['GET'])
 def get_news():
     news = News.query.all()
-    news.sort(key=lambda item: item.id, reverse=True)
+    news.sort(key=lambda item: item.id, reverse=True) # сортируем новости, сначала новые
     return render_template('news.html', news=news)
 
 
 @app.route('/news/<int:n_id>', methods=['GET'])
 def get_news_item(n_id):
-    news = News.query.filter_by(id=n_id).first()
+    news = News.query.filter_by(id=n_id).first() # цепляем конкретную новость по айди
     return render_template('news_item.html', news=news)
 
 
@@ -89,16 +90,18 @@ def get_problems():
     if not 'username' in session:
         return redirect('/login')
     elif session['admin']:
-        problems = ProblemItself.query.all()
+        problems = ProblemItself.query.all() # если админ, то показать все задачи
         return render_template('problems.html', problems=sorted(problems,
                                 key=lambda item: item.id, reverse=True))
     else:
         problems_public = db.session.query(Arrangement, Contest).filter(Contest.time_end 
                                                                         < datetime.now()).all()
+        # добавляем в показ задачи, которые фигурировали в прошедшем контесте(ах)
         problems_public.sort(key=lambda item: item.Arrangement.task_id, reverse=True)
         problems_public = [item.Arrangement.task_id for item in problems_public]
         problems = ProblemItself.query.filter((ProblemItself.id.in_(problems_public))
                                               | (ProblemItself.public.is_(True))).all()
+        # добавляем в выдачу задачи с флагом public
         problems.sort(key=lambda item: item.id, reverse=True)
     return render_template('problems.html', problems=problems)
 
@@ -114,12 +117,12 @@ def solve_problem(p_id):
         user_id = session['user_id']
         code = form.code.data.read()
         user = User.query.filter_by(id=user_id).first()
-        new_solution = Solution(test_case=0,
-                                verdict="Q",
-                                submission_time=datetime.now(),
-                                max_time=0,
-                                problem_id=p_id,
-                                solution_code=0)
+        new_solution = Solution(test_case=0, # тест, на котором решение проверяется
+                                verdict="Q", # queue
+                                submission_time=datetime.now(), # время посылки
+                                max_time=0, # макс. время работы
+                                problem_id=p_id, # айди задачи
+                                solution_code=0) # deprecated
         user.Solutions.append(new_solution)
         db.session.flush()
 
@@ -162,7 +165,7 @@ def add_problem():
 
         compressed_tests = ZipFile("tmp_tests.zip")
         compressed_tests.extractall(os.getcwd() + f"/problem_tests/{new_problem.id}")
-
+        # добавляем тесты путем распаковки архива
 
         db.session.commit()
         return redirect("/news")
@@ -204,6 +207,8 @@ def add_contest():
         announce = form.announce.data
         new_contest = Contest(title=title, time_start=time_start, time_end=time_end)
         for i in range(len(problem_ids)):
+            # добавляем к контесту все задачи с перечисленными айди,
+            # используя связанную сущность
             new_contest.Tasks.append(Arrangement(points=score_dist[i],
                                                  problem_index=i,
                                                  task_id=problem_ids[i]))
