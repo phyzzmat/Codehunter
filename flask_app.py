@@ -12,6 +12,7 @@ from zipfile import ZipFile
 from things import *
 from api_thingies import *
 from database import *
+# Запускаем гуся
 
 
 @app.errorhandler(404)
@@ -21,16 +22,13 @@ def not_found(error):
 
 # Главная страница платформы Codehunter. Здесь присутствует меню новостей,
 # доступ к соревнованиям и логином/регистрацией.
-
 @app.route('/')
 @app.route('/index')
 def index():
-    # Получаем соединение с новостями и достаем все в обратном порядке
-    # Отправляем обратно
     return render_template('index.html')
 
-# Регистрация на платформе
 
+# Регистрация на платформе
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignUpForm()
@@ -45,8 +43,8 @@ def signup():
         return redirect("/index")
     return render_template('signup.html', title='Регистрация', form=form)
 
-# Вход в систему
 
+# Вход в систему
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
